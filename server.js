@@ -6,55 +6,44 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Vérification basique ---
-app.get("/", (req, res) => res.send("✅ Backend ProCryptomancer actif"));
-app.get("/api/health", (req, res) => res.json({ ok: true }));
+// --- Vérif basique / health ---
+app.get("/", (req, res) => res.json({ ok: true }));
+app.get("/api/health", (req, res) => res.json({ status: "up" }));
 
-// --- "Mini base de données" en mémoire (juste pour tester) ---
+// --- "Mini base de données" en mémoire ---
 const users = new Map();
 
-// Inscription
+// --- Inscription ---
 app.post("/api/auth/signup", (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ error: "email et password requis" });
+    return res.status(400).json({ error: "Email et mot de passe requis" });
   }
   if (users.has(email)) {
-    return res.status(409).json({ error: "utilisateur déjà existant" });
+    return res.status(409).json({ error: "Utilisateur déjà existant" });
   }
-
-  users.set(email, { email, password });
-  const token = "demo-" + Buffer.from(email).toString("base64");
-  return res.status(201).json({ message: "utilisateur créé", email, token });
+  users.set(email, password);
+  return res.status(201).json({ success: true, email });
 });
 
-// Connexion
+// --- Connexion ---
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body || {};
-  const u = users.get(email);
-  if (!u || u.password !== password) {
-    return res.status(401).json({ error: "identifiants invalides" });
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email et mot de passe requis" });
   }
-
-  const token = "demo-" + Buffer.from(email).toString("base64");
-  return res.json({ message: "connecté", email, token });
+  const stored = users.get(email);
+  if (!stored) {
+    return res.status(404).json({ error: "Utilisateur non trouvé" });
+  }
+  if (stored !== password) {
+    return res.status(401).json({ error: "Mot de passe incorrect" });
+  }
+  return res.json({ success: true, message: "Connexion réussie", email });
 });
 
-// Profil utilisateur
-app.get("/api/me", (req, res) => {
-  const auth = req.headers.authorization || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!token.startsWith("demo-")) {
-    return res.status(401).json({ error: "token manquant ou invalide" });
-  }
+// 404 par défaut
+app.use((req, res) => res.status(404).json({ error: "Not found" }));
 
-  const email = Buffer.from(token.replace("demo-", ""), "base64").toString("utf8");
-  if (!users.has(email)) {
-    return res.status(401).json({ error: "utilisateur introuvable" });
-  }
-
-  res.json({ user: { email } });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("🚀 Serveur lancé sur le port " + PORT));
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
