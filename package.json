@@ -1,9 +1,12 @@
 {
   "name": "procryptomancer-backend",
   "version": "1.0.0",
+  "description": "Backend API pour ProCryptomancer (Node.js + Express, déploiement Render)",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
@@ -13,7 +16,12 @@
     "helmet": "^7.0.0",
     "express-rate-limit": "^6.7.0"
   },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
   "engines": {
     "node": "18.x"
-  }
+  },
+  "author": "JCproject8",
+  "license": "MIT"
 }
