@@ -1,23 +1,26 @@
-// contest.routes.js — version ESM
-import express from "express";
-const router = express.Router();
+// contest.routes.js — routes de l'API (ESM)
+import { Router } from "express";
+const router = Router();
 
-// Créer un concours
-router.post("/create", (req, res) => {
-  const { title, reward } = req.body || {};
-  if (!title || !reward) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
-  res.json({ message: "Contest created", title, reward });
+// Health simple
+router.get("/health", (_req, res) => {
+  res.json({ status: "healthy", ts: Date.now() });
 });
 
-// Rejoindre un concours
-router.post("/join", (req, res) => {
-  const { user } = req.body || {};
-  if (!user) {
-    return res.status(400).json({ error: "Missing user" });
-  }
-  res.json({ message: `${user} joined the contest` });
+// Exemple d'endpoint "contest"
+router.get("/contest", (_req, res) => {
+  res.json({
+    name: "Crypto Contest #1",
+    status: "open",
+    rules: "Submit your trades; highest PnL wins."
+  });
+});
+
+// Exemple de POST (soumission)
+router.post("/contest/submit", (req, res) => {
+  const payload = req.body || {};
+  // Ici tu traiterais/validerais la soumission
+  res.status(201).json({ ok: true, received: payload });
 });
 
 export default router;
