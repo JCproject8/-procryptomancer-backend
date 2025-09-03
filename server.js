@@ -1,8 +1,11 @@
-// server.js — ultra simple, prêt pour Render
+// server.js — ultra simple, prêt pour Render (ESM)
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+
+// 👇 AJOUT : import des routes concours
+import contestRoutes from "./contest.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,12 +16,15 @@ app.use(cors());
 app.use(helmet());
 app.use(rateLimit({ windowMs: 60 * 1000, max: 120 }));
 
-// mini “base de données” en mémoire (disparaît au redémarrage, ok pour démo)
+// mini “base de données” en mémoire (démo)
 const users = new Map();
 
 // routes de test
 app.get("/", (_req, res) => res.json({ ok: true }));
 app.get("/api/health", (_req, res) => res.json({ status: "up" }));
+
+// 👇 AJOUT : brancher le module concours
+app.use("/api/contest", contestRoutes);
 
 // signup (démo)
 app.post("/api/auth/signup", (req, res) => {
