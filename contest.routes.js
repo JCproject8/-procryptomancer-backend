@@ -1,4 +1,4 @@
-// contest.routes.js — Routes API (ESM)
+// src/contest.routes.js — Routes API (ESM)
 import { Router } from "express";
 import Joi from "joi";
 import mongoose from "mongoose";
@@ -6,7 +6,6 @@ import { Submission } from "./contest.model.js";
 
 const router = Router();
 
-// Schémas de validation
 const submitSchema = Joi.object({
   username: Joi.string().max(80).required(),
   wallet:   Joi.string().max(120).allow("", null),
@@ -16,26 +15,19 @@ const submitSchema = Joi.object({
   note:     Joi.string().max(500).allow("", null)
 });
 
-// Health dédié API
+// Health API
 router.get("/health", (_req, res) => {
-  const dbState = mongoose.connection.readyState; // 0=disconnected,1=connected,2=connecting,3=disconnecting
-  res.json({
-    status: "healthy",
-    db: ["disconnected","connected","connecting","disconnecting"][dbState] || "unknown",
-    ts: Date.now()
-  });
+  const dbState = ["disconnected","connected","connecting","disconnecting"][mongoose.connection.readyState] || "unknown";
+  res.json({ status: "healthy", db: dbState, ts: Date.now() });
 });
 
-// Infos de concours (exemple statique)
+// Infos concours
 router.get("/contest", (_req, res) => {
   res.json({
     name: "Crypto Contest #1",
     status: "open",
     rules: "Poste ta performance (PnL/score). Top classement gagne.",
-    endpoints: {
-      list: "/api/contest/submissions",
-      submit: "/api/contest/submit"
-    }
+    endpoints: { list: "/api/contest/submissions", submit: "/api/contest/submit" }
   });
 });
 
@@ -51,7 +43,7 @@ router.post("/contest/submit", async (req, res) => {
   res.status(201).json({ ok: true, submission: doc });
 });
 
-// Lister les soumissions (avec pagination simple)
+// Lister (pagination)
 router.get("/contest/submissions", async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit || "50", 10), 200);
   const page  = Math.max(parseInt(req.query.page  || "1", 10), 1);
@@ -65,16 +57,15 @@ router.get("/contest/submissions", async (req, res) => {
   res.json({ ok: true, page, limit, total, items });
 });
 
-// (Optionnel) Supprimer une soumission — protégé par token admin
+// Supprimer (token admin)
 router.delete("/contest/submissions/:id", async (req, res) => {
   const token = req.header("X-Admin-Token");
   if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
     return res.status(403).json({ ok: false, error: "Forbidden" });
   }
-  const { id } = req.params;
-  const removed = await Submission.findByIdAndDelete(id);
+  const removed = await Submission.findByIdAndDelete(req.params.id);
   if (!removed) return res.status(404).json({ ok: false, error: "Not found" });
-  res.json({ ok: true, removedId: id });
+  res.json({ ok: true, removedId: req.params.id });
 });
 
 export default router;
