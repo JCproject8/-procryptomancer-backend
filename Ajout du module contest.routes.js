@@ -1,26 +1,16 @@
-// contest.routes.js — routes de l'API (ESM)
-import { Router } from "express";
-const router = Router();
+// contest.model.js — Modèle Mongoose pour les soumissions
+import mongoose from "mongoose";
 
-// Health simple
-router.get("/health", (_req, res) => {
-  res.json({ status: "healthy", ts: Date.now() });
-});
+const SubmissionSchema = new mongoose.Schema(
+  {
+    username: { type: String, trim: true, required: true, maxlength: 80 },
+    wallet:   { type: String, trim: true, maxlength: 120 },
+    pnl:      { type: Number, default: 0 },     // profit & loss
+    score:    { type: Number, default: 0 },     // autre métrique si tu veux
+    txHash:   { type: String, trim: true, maxlength: 120 },
+    note:     { type: String, trim: true, maxlength: 500 }
+  },
+  { timestamps: true }
+);
 
-// Exemple d'endpoint "contest"
-router.get("/contest", (_req, res) => {
-  res.json({
-    name: "Crypto Contest #1",
-    status: "open",
-    rules: "Submit your trades; highest PnL wins."
-  });
-});
-
-// Exemple de POST (soumission)
-router.post("/contest/submit", (req, res) => {
-  const payload = req.body || {};
-  // Ici tu traiterais/validerais la soumission
-  res.status(201).json({ ok: true, received: payload });
-});
-
-export default router;
+export const Submission = mongoose.models.Submission || mongoose.model("Submission", SubmissionSchema);
